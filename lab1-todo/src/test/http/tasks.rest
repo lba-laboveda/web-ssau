@@ -2,7 +2,7 @@
 @baseUrl = http://localhost:8080
 @userId = 2
 
-### 1. Создать новую задачу
+### Создать задачу
 # @name createTask1
 POST {{baseUrl}}/tasks
 Content-Type: application/json
@@ -13,7 +13,6 @@ Content-Type: application/json
   "createdBy": {{userId}}
 }
 
-### 2. Создать ещё одну задачу
 # @name createTask2
 POST {{baseUrl}}/tasks
 Content-Type: application/json
@@ -24,7 +23,6 @@ Content-Type: application/json
   "createdBy": {{userId}}
 }
 
-### 3. Создать задачу с игнорируемыми полями
 POST {{baseUrl}}/tasks
 Content-Type: application/json
 
@@ -36,20 +34,18 @@ Content-Type: application/json
   "createdAt": "2000-01-01T00:00:00"
 }
 
-### 4. Получить задачу по идентификатору (существующая)
+### Получить задачу по идентификатору
 # @name getTask1
 GET {{baseUrl}}/tasks/{{createTask1.response.body.id}}
 
-### 5. Получить задачу по идентификатору (несуществующая)
 GET {{baseUrl}}/tasks/999
 
-### 6. Получить все задачи пользователя (без дат)
+### Получить все задачи пользователя 
 GET {{baseUrl}}/tasks?userId={{userId}}
 
-### 7. Получить задачи в диапазоне дат
 GET {{baseUrl}}/tasks?from=2026-01-01T00:00:00&to=2026-12-31T23:59:59&userId={{userId}}
 
-### 8. Обновить задачу
+### Обновить задачу
 PUT {{baseUrl}}/tasks/{{createTask1.response.body.id}}
 Content-Type: application/json
 
@@ -59,7 +55,7 @@ Content-Type: application/json
   "createdBy": {{userId}}
 }
 
-### 9. Обновить задачу (игнорирование id из тела)
+### Обновить задачу 
 PUT {{baseUrl}}/tasks/{{createTask2.response.body.id}}
 Content-Type: application/json
 
@@ -70,7 +66,7 @@ Content-Type: application/json
   "createdBy": {{userId}}
 }
 
-### 10. Обновить несуществующую задачу
+### Обновить несуществующую задачу
 PUT {{baseUrl}}/tasks/999
 Content-Type: application/json
 
@@ -80,14 +76,14 @@ Content-Type: application/json
   "createdBy": {{userId}}
 }
 
-### 11. Подсчитать активные задачи пользователя
+### Подсчитать активные задачи пользователя
 GET {{baseUrl}}/tasks/active/count?userId={{userId}}
 
-### 12. Удалить задачу
+### Удалить задачу
 DELETE {{baseUrl}}/tasks/{{createTask1.response.body.id}}
 
-### 13. Удалить несуществующую задачу
+### Удалить несуществующую задачу
 DELETE {{baseUrl}}/tasks/999
 
-### 14. Проверить, что задача удалена
+### Проверить, что задача удалена
 GET {{baseUrl}}/tasks/{{createTask1.response.body.id}}
