@@ -1,17 +1,13 @@
 package ru.ssau.todo.repository;
 
-import java.sql.PreparedStatement;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
 import org.springframework.context.annotation.Profile;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
-import org.springframework.jdbc.support.GeneratedKeyHolder;
-import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
 
 import ru.ssau.todo.entity.Task;
@@ -39,28 +35,20 @@ public class TaskJdbcRepository implements TaskRepository {
 
     @Override
     public Task create(Task task) {
-        String sql = "INSERT INTO task (title, status, created_by, created_at) VALUES (?, ?, ?, ?)";
+        String sql = "INSERT INTO task (title, status, created_by, created_at) " +
+                "VALUES (?, ?, ?, ?) RETURNING id";
 
         LocalDateTime now = LocalDateTime.now();
 
-        KeyHolder keyHolder = new GeneratedKeyHolder();
+        Long id = jdbcTemplate.queryForObject(
+                sql,
+                Long.class,
+                task.getTitle(),
+                task.getStatus().name(),
+                task.getCreatedBy(),
+                Timestamp.valueOf(now));
 
-        jdbcTemplate.update(connection -> {
-            PreparedStatement ps = connection.prepareStatement(sql, new String[] { "id" });
-            ps.setString(1, task.getTitle());
-            ps.setString(2, task.getStatus().name());
-            ps.setLong(3, task.getCreatedBy());
-            ps.setTimestamp(4, Timestamp.valueOf(now));
-            return ps;
-        }, keyHolder);
-
-        Map<String, Object> keys = keyHolder.getKeys();
-        if (keys != null && keys.containsKey("id")) {
-            task.setId(((Number) keys.get("id")).longValue());
-        } else {
-            throw new RuntimeException("Could not obtain generated ID");
-        }
-
+        task.setId(id);
         task.setCreatedAt(now);
         return task;
     }
