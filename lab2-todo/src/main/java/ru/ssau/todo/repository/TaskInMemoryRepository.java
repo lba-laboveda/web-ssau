@@ -7,12 +7,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Repository;
 
 import ru.ssau.todo.entity.Task;
 import ru.ssau.todo.entity.TaskStatus;
 
 @Repository
+@Profile("in-memory")
 public class TaskInMemoryRepository implements TaskRepository {
 
     private final Map<Long, Task> tasks = new HashMap<>();

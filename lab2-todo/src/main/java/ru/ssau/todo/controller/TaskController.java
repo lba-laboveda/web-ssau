@@ -1,3 +1,4 @@
+
 package ru.ssau.todo.controller;
 
 import java.time.LocalDateTime;
@@ -16,33 +17,36 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import ru.ssau.todo.entity.Task;
-import ru.ssau.todo.repository.TaskRepository;
+import ru.ssau.todo.service.TaskService;
 
 @RestController
 @RequestMapping("/tasks")
 public class TaskController {
 
-    private final TaskRepository taskRepository;
+    private final TaskService taskService;
 
-    public TaskController(TaskRepository taskRepository) {
-        this.taskRepository = taskRepository;
+    public TaskController(TaskService taskService) {
+        this.taskService = taskService;
     }
 
     @PostMapping
-    public ResponseEntity<Task> createTask(@RequestBody Task task) {
+    public ResponseEntity<?> createTask(@RequestBody Task task) {
+
         if (task == null || task.getTitle() == null || task.getTitle().isBlank() || task.getStatus() == null) {
             return ResponseEntity.badRequest().build();
         }
-        Task created = taskRepository.create(task);
+
+        Task created = taskService.createTask(task);
         return ResponseEntity
                 .status(HttpStatus.CREATED)
                 .header("Location", "/tasks/" + created.getId())
                 .body(created);
+
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<Task> getTaskById(@PathVariable long id) {
-        return taskRepository.findById(id)
+        return taskService.findById(id)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
@@ -53,7 +57,7 @@ public class TaskController {
             @RequestParam(required = false) LocalDateTime to,
             @RequestParam long userId) {
 
-        List<Task> tasks = taskRepository.findAll(from, to, userId);
+        List<Task> tasks = taskService.findAll(from, to, userId);
         return ResponseEntity.ok(tasks);
     }
 
@@ -62,25 +66,30 @@ public class TaskController {
             @PathVariable long id,
             @RequestBody Task task) {
 
-        task.setId(id);
-
         try {
-            taskRepository.update(task);
-            return ResponseEntity.ok(task);
+            task.setId(id);
+            Task updated = taskService.updateTask(task);
+            return ResponseEntity.ok(updated);
+
+        } catch (IllegalStateException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
         } catch (Exception e) {
             return ResponseEntity.notFound().build();
         }
     }
 
-   @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteTask(@PathVariable long id) {
-        taskRepository.deleteById(id);
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> deleteTask(@PathVariable long id) {
+
+        taskService.deleteTask(id);
         return ResponseEntity.noContent().build();
+
     }
 
     @GetMapping("/active/count")
     public ResponseEntity<Long> countActiveTasks(@RequestParam long userId) {
-        long count = taskRepository.countActiveTasksByUserId(userId);
+        long count = taskService.countActiveTasksByUserId(userId);
         return ResponseEntity.ok(count);
     }
+    
 }
