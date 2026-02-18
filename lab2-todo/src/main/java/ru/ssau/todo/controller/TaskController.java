@@ -32,10 +32,7 @@ public class TaskController {
     @PostMapping
     public ResponseEntity<?> createTask(@RequestBody Task task) {
 
-        if (task == null || task.getTitle() == null || task.getTitle().isBlank() || task.getStatus() == null) {
-            return ResponseEntity.badRequest().build();
-        }
-
+        validateTask(task);
         Task created = taskService.createTask(task);
         return ResponseEntity
                 .status(HttpStatus.CREATED)
@@ -62,12 +59,10 @@ public class TaskController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<?> updateTask(
-            @PathVariable long id,
-            @RequestBody Task task) {
-
-        try {
+    public ResponseEntity<?> updateTask(@PathVariable long id, @RequestBody Task task) {
             task.setId(id);
+            validateTask(task);
+        try {
             Task updated = taskService.updateTask(task);
             return ResponseEntity.ok(updated);
 
@@ -92,4 +87,18 @@ public class TaskController {
         return ResponseEntity.ok(count);
     }
     
+    private void validateTask(Task task) {
+        if (task == null) {
+            throw new TaskException("Task cannot be null");
+        }
+        if (task.getTitle() == null || task.getTitle().isBlank()) {
+            throw new TaskException("Title is required");
+        }
+        if (task.getStatus() == null) {
+            throw new TaskException("Status is required");
+        }
+        if (task.getCreatedBy() == null) {
+            throw new TaskException("CreatedBy is required");
+        }
+    }
 }
