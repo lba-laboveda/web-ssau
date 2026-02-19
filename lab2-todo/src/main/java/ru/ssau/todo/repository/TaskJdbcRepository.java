@@ -6,12 +6,14 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.context.annotation.Profile;
+import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
 
 import ru.ssau.todo.entity.Task;
 import ru.ssau.todo.entity.TaskStatus;
+import ru.ssau.todo.exception.TaskNotFoundException;
 
 @Repository
 @Profile("jdbc")
@@ -53,13 +55,13 @@ public class TaskJdbcRepository implements TaskRepository {
         return task;
     }
 
-    @Override
+   @Override
     public Optional<Task> findById(long id) {
         String sql = "SELECT * FROM task WHERE id = ?";
         try {
             Task task = jdbcTemplate.queryForObject(sql, taskRowMapper, id);
             return Optional.ofNullable(task);
-        } catch (Exception e) {
+        } catch (EmptyResultDataAccessException e) {
             return Optional.empty();
         }
     }
@@ -74,12 +76,12 @@ public class TaskJdbcRepository implements TaskRepository {
     }
 
     @Override
-    public void update(Task task) throws Exception {
+    public void update(Task task) throws TaskNotFoundException {
         String sql = "UPDATE task SET title = ?, status = ? WHERE id = ?";
         int updated = jdbcTemplate.update(sql, task.getTitle(), task.getStatus().name(), task.getId());
 
         if (updated == 0) {
-            throw new Exception("Task with id " + task.getId() + " not found");
+            throw new TaskNotFoundException(task.getId());
         }
     }
 

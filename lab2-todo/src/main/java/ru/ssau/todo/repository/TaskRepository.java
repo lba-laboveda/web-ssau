@@ -1,10 +1,11 @@
 package ru.ssau.todo.repository;
 
-import ru.ssau.todo.entity.Task;
-
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+
+import ru.ssau.todo.entity.Task;
+import ru.ssau.todo.exception.TaskNotFoundException;
 
 /**
  * Интерфейс репозитория для управления жизненным циклом сущностей {@link Task}.
@@ -48,7 +49,7 @@ public interface TaskRepository {
      * @param task объект задачи с обновленными данными.
      * @throws Exception (специализированное исключение) если задача с таким ID не существует.
      */
-    void update(Task task) throws Exception;
+    void update(Task task)  throws TaskNotFoundException;
 
     /**
      * Удаляет задачу из хранилища по её идентификатору.

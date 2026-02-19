@@ -12,6 +12,8 @@ import org.springframework.stereotype.Repository;
 
 import ru.ssau.todo.entity.Task;
 import ru.ssau.todo.entity.TaskStatus;
+import ru.ssau.todo.exception.TaskBusinessException;
+import ru.ssau.todo.exception.TaskNotFoundException;
 
 @Repository
 @Profile("in-memory")
@@ -23,7 +25,7 @@ public class TaskInMemoryRepository implements TaskRepository {
     @Override
     public synchronized Task create(Task task) {
         if (task == null || task.getTitle() == null || task.getTitle().isBlank() || task.getStatus() == null) {
-            throw new IllegalArgumentException("Task cannot be null");
+            throw new TaskBusinessException("Invalid task data");
         }
 
         long newId = count++;
@@ -59,38 +61,37 @@ public class TaskInMemoryRepository implements TaskRepository {
     }
 
     @Override
-    public void update(Task task) throws Exception {
+    public void update(Task task) {
         if (task == null) {
-            throw new IllegalArgumentException("Task cannot be null");
+            throw new TaskBusinessException("Task cannot be null");
         }
+        
         long id = task.getId();
         Task existingTask = tasks.get(id);
+        
         if (existingTask == null) {
-            throw new Exception("Task with id " + id + " not found");
+            throw new TaskNotFoundException(id);
         }
 
-        LocalDateTime newCreatedAt = existingTask.getCreatedAt();
-        task.setCreatedAt(newCreatedAt);
+        task.setCreatedAt(existingTask.getCreatedAt());
+        task.setCreatedBy(existingTask.getCreatedBy());
+        
         tasks.put(id, task);
     }
 
     @Override
-    public void deleteById(long id) {
-        tasks.remove(id);
+public void deleteById(long id) {
+    if (!tasks.containsKey(id)) {
+        throw new TaskNotFoundException(id); 
     }
+    tasks.remove(id);
+}
 
     @Override
-    public long countActiveTasksByUserId(long userId) {
-        long countActive = 0;
-        for (Task task : tasks.values()) {
-            if (task.getCreatedBy() == userId) {
-                TaskStatus status = task.getStatus();
-                if (status == TaskStatus.OPEN || status == TaskStatus.IN_PROGRESS) {
-                    countActive++;
-                }
-            }
-        }
-
-        return countActive;
-    }
+public long countActiveTasksByUserId(long userId) {
+    return tasks.values().stream()
+            .filter(task -> task.getCreatedBy() != null && task.getCreatedBy() == userId)
+            .filter(task -> task.getStatus() == TaskStatus.OPEN || task.getStatus() == TaskStatus.IN_PROGRESS)
+            .count();
+}
 }

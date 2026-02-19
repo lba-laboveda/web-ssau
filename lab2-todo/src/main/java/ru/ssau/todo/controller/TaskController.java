@@ -1,4 +1,3 @@
-
 package ru.ssau.todo.controller;
 
 import java.time.LocalDateTime;
@@ -17,6 +16,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import ru.ssau.todo.entity.Task;
+import ru.ssau.todo.exception.TaskValidationException;
 import ru.ssau.todo.service.TaskService;
 
 @RestController
@@ -30,15 +30,13 @@ public class TaskController {
     }
 
     @PostMapping
-    public ResponseEntity<?> createTask(@RequestBody Task task) {
-
+    public ResponseEntity<Task> createTask(@RequestBody Task task) {
         validateTask(task);
         Task created = taskService.createTask(task);
         return ResponseEntity
                 .status(HttpStatus.CREATED)
                 .header("Location", "/tasks/" + created.getId())
                 .body(created);
-
     }
 
     @GetMapping("/{id}")
@@ -59,26 +57,17 @@ public class TaskController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<?> updateTask(@PathVariable long id, @RequestBody Task task) {
-            task.setId(id);
-            validateTask(task);
-        try {
-            Task updated = taskService.updateTask(task);
-            return ResponseEntity.ok(updated);
-
-        } catch (IllegalStateException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        } catch (Exception e) {
-            return ResponseEntity.notFound().build();
-        }
+    public ResponseEntity<Task> updateTask(@PathVariable long id, @RequestBody Task task) {
+        task.setId(id);
+        validateTask(task);
+        Task updated = taskService.updateTask(task);
+        return ResponseEntity.ok(updated);
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<?> deleteTask(@PathVariable long id) {
-
+    public ResponseEntity<Void> deleteTask(@PathVariable long id) {
         taskService.deleteTask(id);
         return ResponseEntity.noContent().build();
-
     }
 
     @GetMapping("/active/count")
@@ -89,16 +78,16 @@ public class TaskController {
     
     private void validateTask(Task task) {
         if (task == null) {
-            throw new TaskException("Task cannot be null");
+            throw new TaskValidationException("Task cannot be null");
         }
         if (task.getTitle() == null || task.getTitle().isBlank()) {
-            throw new TaskException("Title is required");
+            throw new TaskValidationException("Title is required", "title");
         }
         if (task.getStatus() == null) {
-            throw new TaskException("Status is required");
+            throw new TaskValidationException("Status is required", "status");
         }
         if (task.getCreatedBy() == null) {
-            throw new TaskException("CreatedBy is required");
+            throw new TaskValidationException("CreatedBy is required", "createdBy");
         }
     }
 }
