@@ -40,7 +40,7 @@ public class TaskService {
         if (isBecomingActive(task.getStatus(), existing.getStatus())) {
             checkActiveTasksLimit(existing.getCreatedBy());
         }
-        taskRepository.update(task); 
+        taskRepository.update(task);
         return task;
     }
 
@@ -63,12 +63,11 @@ public class TaskService {
     private void validateTaskForDeletion(Task task) {
         LocalDateTime createdAt = task.getCreatedAt();
         LocalDateTime earliestAllowedDeletionTime = LocalDateTime.now().minusMinutes(DELETE_RESTRICTION_MINUTES);
-        
+
         if (createdAt.isAfter(earliestAllowedDeletionTime)) {
             throw new TaskBusinessException(
-                String.format("Cannot delete task %d created less than %d minutes ago", 
-                task.getId(), DELETE_RESTRICTION_MINUTES)
-            );
+                    String.format("Cannot delete task %d created less than %d minutes ago",
+                            task.getId(), DELETE_RESTRICTION_MINUTES));
         }
     }
 
@@ -76,9 +75,8 @@ public class TaskService {
         long activeCount = taskRepository.countActiveTasksByUserId(userId);
         if (activeCount >= MAX_ACTIVE_TASKS) {
             throw new TaskBusinessException(
-                String.format("User %d already has %d active tasks (maximum %d)", 
-                userId, activeCount, MAX_ACTIVE_TASKS)
-            );
+                    String.format("User %d already has %d active tasks (maximum %d)",
+                            userId, activeCount, MAX_ACTIVE_TASKS));
         }
     }
 
@@ -92,7 +90,7 @@ public class TaskService {
 
     private Task findExistingTask(long id) {
         return taskRepository.findById(id)
-            .orElseThrow(() -> new TaskNotFoundException(id));
+                .orElseThrow(() -> new TaskNotFoundException(id));
     }
 
     private void protectImmutableFields(Task target, Task source) {
@@ -104,8 +102,9 @@ public class TaskService {
         return taskRepository.countActiveTasksByUserId(userId);
     }
 
-    public Optional<Task> findById(long id) {
-        return taskRepository.findById(id);
+    public Task findById(long id) {
+        return taskRepository.findById(id)
+                .orElseThrow(() -> new TaskNotFoundException(id));
     }
 
     public List<Task> findAll(LocalDateTime from, LocalDateTime to, long userId) {

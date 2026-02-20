@@ -40,10 +40,8 @@ public class TaskController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Task> getTaskById(@PathVariable long id) {
-        return taskService.findById(id)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+    public Task getTaskById(@PathVariable long id) {
+        return taskService.findById(id);
     }
 
     @GetMapping
@@ -52,6 +50,7 @@ public class TaskController {
             @RequestParam(required = false) LocalDateTime to,
             @RequestParam long userId) {
 
+        validateTime(from, to);
         List<Task> tasks = taskService.findAll(from, to, userId);
         return ResponseEntity.ok(tasks);
     }
@@ -75,7 +74,7 @@ public class TaskController {
         long count = taskService.countActiveTasksByUserId(userId);
         return ResponseEntity.ok(count);
     }
-    
+
     private void validateTask(Task task) {
         if (task == null) {
             throw new TaskValidationException("Task cannot be null");
@@ -88,6 +87,16 @@ public class TaskController {
         }
         if (task.getCreatedBy() == null) {
             throw new TaskValidationException("CreatedBy is required", "createdBy");
+        }
+    }
+
+    private void validateTime(LocalDateTime from, LocalDateTime to) {
+        if (from != null && to != null) {
+            if (from.isAfter(to)) {
+                throw new TaskValidationException(
+                        String.format("Start date [%s] cannot be after end date [%s]", from, to),
+                        "dateRange");
+            }
         }
     }
 }

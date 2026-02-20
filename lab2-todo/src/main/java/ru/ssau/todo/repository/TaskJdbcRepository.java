@@ -41,7 +41,6 @@ public class TaskJdbcRepository implements TaskRepository {
                 "VALUES (?, ?, ?, ?) RETURNING id";
 
         LocalDateTime now = LocalDateTime.now();
-
         Long id = jdbcTemplate.queryForObject(
                 sql,
                 Long.class,
@@ -55,7 +54,7 @@ public class TaskJdbcRepository implements TaskRepository {
         return task;
     }
 
-   @Override
+    @Override
     public Optional<Task> findById(long id) {
         String sql = "SELECT * FROM task WHERE id = ?";
         try {
@@ -69,7 +68,8 @@ public class TaskJdbcRepository implements TaskRepository {
     @Override
     public List<Task> findAll(LocalDateTime from, LocalDateTime to, long userId) {
         String sql = "SELECT * FROM task WHERE created_by = ? " +
-                "AND created_at BETWEEN COALESCE(?, '1970-01-01') AND COALESCE(?, '9999-12-31') " +
+                "AND (created_at >= COALESCE(?, created_at)) " +
+                "AND (created_at <= COALESCE(?, created_at)) " +
                 "ORDER BY created_at DESC";
 
         return jdbcTemplate.query(sql, taskRowMapper, userId, from, to);
