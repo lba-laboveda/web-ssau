@@ -1,0 +1,91 @@
+
+@baseUrl = http://localhost:8080
+@userId = 2
+
+### Создать задачу
+# @name createTask1
+POST {{baseUrl}}/tasks
+Content-Type: application/json
+
+{
+  "title": "Купить молоко",
+  "status": "OPEN",
+  "createdBy": {{userId}}
+}
+
+### Создать задачу
+# @name createTask2
+POST {{baseUrl}}/tasks
+Content-Type: application/json
+
+{
+  "title": "Сделать лабораторную",
+  "status": "IN_PROGRESS",
+  "createdBy": {{userId}}
+}
+
+### Создать задачу
+# @name createTask3
+POST {{baseUrl}}/tasks
+Content-Type: application/json
+
+{
+  "id": 999,
+  "title": "Протестировать игнорирование полей",
+  "status": "OPEN",
+  "createdBy": 2,
+  "createdAt": "2000-01-01T00:00:00"
+}
+
+### Получить задачу по идентификатору
+# @name getTask1
+GET {{baseUrl}}/tasks/{{createTask1.response.body.id}}
+
+GET {{baseUrl}}/tasks/999
+
+### Получить все задачи пользователя 
+GET {{baseUrl}}/tasks?userId={{userId}}
+
+GET {{baseUrl}}/tasks?from=2024-01-01T00:00:00&to=2025-12-31T23:59:59&userId={{userId}}
+
+curl -v "http://localhost:8080/tasks?from=2025-01-01T00:00:00&to=2024-12-31T23:59:59&userId=2"
+
+### Обновить задачу
+PUT {{baseUrl}}/tasks/17
+Content-Type: application/json
+
+{
+  "title": "Купить молоко",
+  "status": "DONE",
+  "createdBy": {{userId}}
+}
+
+### Обновить задачу 
+PUT http://localhost:8080/tasks/9
+Content-Type: application/json
+
+{
+  "title": "Купить молоко",
+  "status": "DONE",
+  "createdBy": 2
+}
+
+### Обновить несуществующую задачу
+PUT {{baseUrl}}/tasks/17
+Content-Type: application/json
+
+{
+  "title": "Несуществующая задача",
+  "status": "OPEN",
+  "createdBy": {{userId}}
+}
+
+### Подсчитать активные задачи пользователя
+GET {{baseUrl}}/tasks/active/count?userId={{userId}}
+
+### Удалить задачу
+DELETE {{baseUrl}}/tasks/999
+
+
+### Проверить, что задача удалена
+GET {{baseUrl}}/tasks/999
