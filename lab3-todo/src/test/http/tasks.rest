@@ -51,7 +51,7 @@ GET {{baseUrl}}/tasks?from=2024-01-01T00:00:00&to=2025-12-31T23:59:59&userId={{u
 curl -v "http://localhost:8080/tasks?from=2025-01-01T00:00:00&to=2024-12-31T23:59:59&userId=2"
 
 ### Обновить задачу
-PUT {{baseUrl}}/tasks/17
+PUT {{baseUrl}}/tasks/19
 Content-Type: application/json
 
 {
@@ -84,7 +84,7 @@ Content-Type: application/json
 GET {{baseUrl}}/tasks/active/count?userId={{userId}}
 
 ### Удалить задачу
-DELETE {{baseUrl}}/tasks/999
+DELETE {{baseUrl}}/tasks/4
 
 
 ### Проверить, что задача удалена

@@ -15,12 +15,14 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import ru.ssau.todo.exception.TaskBusinessException;
 import ru.ssau.todo.exception.TaskNotFoundException;
 import ru.ssau.todo.exception.TaskValidationException;
+import ru.ssau.todo.exception.UserNotFoundException;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+
     private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
-    private Map<String, Object> createBaseResponse(HttpStatus status, String error, String message) {
+    private Map<String, Object> buildErrorResponse(HttpStatus status, String error, String message) {
         Map<String, Object> response = new HashMap<>();
         response.put("timestamp", LocalDateTime.now());
         response.put("status", status.value());
@@ -31,10 +33,10 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(TaskNotFoundException.class)
     public ResponseEntity<Map<String, Object>> handleNotFound(TaskNotFoundException e) {
-        Map<String, Object> response = createBaseResponse(
-            HttpStatus.NOT_FOUND, 
-            "Not Found", 
-            e.getMessage()
+        Map<String, Object> response = buildErrorResponse(
+                HttpStatus.NOT_FOUND,
+                "Not Found",
+                e.getMessage()
         );
         response.put("errorCode", e.getErrorCode());
         response.put("taskId", e.getTaskId());
@@ -42,12 +44,24 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
     }
 
+    @ExceptionHandler(UserNotFoundException.class)
+    public ResponseEntity<Map<String, Object>> handleUserNotFound(UserNotFoundException e) {
+        Map<String, Object> response = buildErrorResponse(
+                HttpStatus.NOT_FOUND,
+                "Not Found",
+                e.getMessage()
+        );
+        response.put("errorCode", e.getErrorCode());
+
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+    }
+
     @ExceptionHandler(TaskValidationException.class)
     public ResponseEntity<Map<String, Object>> handleValidation(TaskValidationException e) {
-        Map<String, Object> response = createBaseResponse(
-            HttpStatus.BAD_REQUEST, 
-            "Validation Error", 
-            e.getMessage()
+        Map<String, Object> response = buildErrorResponse(
+                HttpStatus.BAD_REQUEST,
+                "Validation Error",
+                e.getMessage()
         );
         response.put("errorCode", e.getErrorCode());
 
@@ -56,10 +70,10 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(TaskBusinessException.class)
     public ResponseEntity<Map<String, Object>> handleBusiness(TaskBusinessException e) {
-        Map<String, Object> response = createBaseResponse(
-            HttpStatus.BAD_REQUEST, 
-            "Business Rule Violation", 
-            e.getMessage()
+        Map<String, Object> response = buildErrorResponse(
+                HttpStatus.BAD_REQUEST,
+                "Business Rule Violation",
+                e.getMessage()
         );
         response.put("errorCode", e.getErrorCode());
 
@@ -68,31 +82,27 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<Map<String, Object>> handleValidationExceptions(MethodArgumentNotValidException ex) {
-        Map<String, Object> response = createBaseResponse(
-            HttpStatus.BAD_REQUEST, 
-            "Validation Error", 
-            "Validation failed"
+        Map<String, Object> response = buildErrorResponse(
+                HttpStatus.BAD_REQUEST,
+                "Validation Error",
+                "Validation failed"
         );
-        
+
         Map<String, String> errors = new HashMap<>();
-        ex.getBindingResult().getFieldErrors().forEach(error -> 
-            errors.put(error.getField(), error.getDefaultMessage())
+        ex.getBindingResult().getFieldErrors().forEach(error ->
+                errors.put(error.getField(), error.getDefaultMessage())
         );
-        
-        ex.getBindingResult().getGlobalErrors().forEach(error -> 
-            errors.put("dateRange", error.getDefaultMessage())
-        );
-        
+
         response.put("errors", errors);
         return ResponseEntity.badRequest().body(response);
     }
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Map<String, Object>> handleGeneric(Exception e) {
-        Map<String, Object> response = createBaseResponse(
-            HttpStatus.INTERNAL_SERVER_ERROR, 
-            "Internal Server Error", 
-            "An unexpected error occurred"
+        Map<String, Object> response = buildErrorResponse(
+                HttpStatus.INTERNAL_SERVER_ERROR,
+                "Internal Server Error",
+                "An unexpected error occurred"
         );
         log.error("Unexpected error occurred", e);
 

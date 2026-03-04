@@ -14,25 +14,25 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 
 @Entity
-@Table(name = "task")
+@Table
 public class Task {
     
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     
-    @Column(name = "title", nullable = false)
+    @Column(nullable = false)
     private String title;
     
     @Enumerated(EnumType.STRING)
-    @Column(name = "status", nullable = false)
+    @Column(nullable = false)
     private TaskStatus status;
     
     @ManyToOne
-    @JoinColumn(name = "created_by")
+    @JoinColumn
     private User createdBy;
     
-    @Column(name = "created_at")
+    @Column
     private LocalDateTime createdAt;
     
     public Task() {}

@@ -12,14 +12,14 @@ import jakarta.persistence.ManyToMany;
 import jakarta.persistence.Table;
 
 @Entity
-@Table(name = "roles")
+@Table
 public class Role {
     
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     
-    @Column(name = "name", length = 50, nullable = false, unique = true)
+    @Column( length = 50, nullable = false, unique = true)
     private String name;
     
     @ManyToMany(mappedBy = "roles")

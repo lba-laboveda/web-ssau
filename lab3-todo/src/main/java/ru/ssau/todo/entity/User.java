@@ -15,14 +15,14 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 
 @Entity
-@Table(name = "users")
+@Table
 public class User {
     
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     
-    @Column(name = "username", length = 100, nullable = false, unique = true)
+    @Column(length = 100, nullable = false, unique = true)
     private String username;
     
     @OneToMany(mappedBy = "createdBy")

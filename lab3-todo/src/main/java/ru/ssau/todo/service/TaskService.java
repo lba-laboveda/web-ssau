@@ -15,6 +15,7 @@ import ru.ssau.todo.entity.User;
 import ru.ssau.todo.exception.TaskBusinessException;
 import ru.ssau.todo.exception.TaskNotFoundException;
 import ru.ssau.todo.exception.UserNotFoundException;
+import ru.ssau.todo.mapper.TaskMapper;
 import ru.ssau.todo.repository.TaskRepository;
 import ru.ssau.todo.repository.UserRepository;
 
@@ -32,20 +33,19 @@ public class TaskService {
         this.taskRepository = taskRepository;
         this.userRepository = userRepository;
     }
+
     @Transactional
     public TaskDto createTask(TaskDto taskDto) {
         User user = userRepository.findById(taskDto.getCreatedBy())
                 .orElseThrow(() -> new UserNotFoundException(taskDto.getCreatedBy()));
 
         checkActiveTasksLimit(user.getId());
-        Task task = new Task();
-        task.setTitle(taskDto.getTitle());
-        task.setStatus(taskDto.getStatus());
-        task.setCreatedBy(user);
+
+        Task task = TaskMapper.toEntity(taskDto, user);
         task.setCreatedAt(LocalDateTime.now());
 
         Task savedTask = taskRepository.save(task);
-        return TaskDto.fromEntity(savedTask);
+        return TaskMapper.toDto(savedTask);
     }
 
     @Transactional
@@ -65,7 +65,7 @@ public class TaskService {
         existing.setStatus(taskDto.getStatus());
 
         Task updatedTask = taskRepository.save(existing);
-        return TaskDto.fromEntity(updatedTask);
+        return TaskMapper.toDto(updatedTask);
     }
 
     @Transactional
@@ -87,7 +87,7 @@ public class TaskService {
     public TaskDto findById(Long id) {
         Task task = taskRepository.findById(id)
                 .orElseThrow(() -> new TaskNotFoundException(id));
-        return TaskDto.fromEntity(task);
+        return TaskMapper.toDto(task);
     }
 
     @Transactional(readOnly = true)
@@ -99,7 +99,7 @@ public class TaskService {
 
         List<Task> tasks = taskRepository.findTasksByDateRangeAndUser(from, to, userId);
         return tasks.stream()
-                .map(TaskDto::fromEntity)
+                .map(TaskMapper::toDto)
                 .collect(Collectors.toList());
     }
 
