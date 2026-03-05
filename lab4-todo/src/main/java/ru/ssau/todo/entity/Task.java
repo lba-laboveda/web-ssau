@@ -14,7 +14,7 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 
 @Entity
-@Table(name = "task")
+@Table
 public class Task {
     
     @Id
@@ -29,7 +29,7 @@ public class Task {
     private TaskStatus status;
     
     @ManyToOne
-    @JoinColumn(name = "created_by")
+    @JoinColumn
     private User createdBy;
     
     @Column
