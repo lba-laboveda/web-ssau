@@ -84,7 +84,7 @@ Content-Type: application/json
 GET {{baseUrl}}/tasks/active/count?userId={{userId}}
 
 ### Удалить задачу
-DELETE {{baseUrl}}/tasks/4
+DELETE {{baseUrl}}/tasks/21
 
 
 ### Проверить, что задача удалена

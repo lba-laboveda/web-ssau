@@ -19,6 +19,7 @@ public class TaskFilterDto {
     public TaskFilterDto() {}
 
     public TaskFilterDto(LocalDateTime from, LocalDateTime to, Long userId) {
+        System.out.println("AAAAAAAAAAAAAAAAAAAAAAAAAAAfrom=" + from + ", to=" + to);
         this.from = from;
         this.to = to;
         this.userId = userId;

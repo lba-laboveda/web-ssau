@@ -12,9 +12,11 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+import ru.ssau.todo.exception.InvalidTokenException;
 import ru.ssau.todo.exception.TaskBusinessException;
 import ru.ssau.todo.exception.TaskNotFoundException;
 import ru.ssau.todo.exception.TaskValidationException;
+import ru.ssau.todo.exception.TokenExpiredException;
 import ru.ssau.todo.exception.UserNotFoundException;
 
 @RestControllerAdvice
@@ -31,81 +33,74 @@ public class GlobalExceptionHandler {
         return response;
     }
 
+    @ExceptionHandler(TokenExpiredException.class)
+    public ResponseEntity<Map<String, Object>> handleTokenExpired(TokenExpiredException e) {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(buildErrorResponse(HttpStatus.UNAUTHORIZED, "Unauthorized", e.getMessage()));
+    }
+
+    @ExceptionHandler(InvalidTokenException.class)
+    public ResponseEntity<Map<String, Object>> handleInvalidToken(InvalidTokenException e) {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(buildErrorResponse(HttpStatus.UNAUTHORIZED, "Unauthorized", e.getMessage()));
+    }
+
     @ExceptionHandler(TaskNotFoundException.class)
     public ResponseEntity<Map<String, Object>> handleNotFound(TaskNotFoundException e) {
         Map<String, Object> response = buildErrorResponse(
-                HttpStatus.NOT_FOUND,
-                "Not Found",
-                e.getMessage()
-        );
+                HttpStatus.NOT_FOUND, "Not Found", e.getMessage());
         response.put("errorCode", e.getErrorCode());
         response.put("taskId", e.getTaskId());
-
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
     }
 
     @ExceptionHandler(UserNotFoundException.class)
     public ResponseEntity<Map<String, Object>> handleUserNotFound(UserNotFoundException e) {
         Map<String, Object> response = buildErrorResponse(
-                HttpStatus.NOT_FOUND,
-                "Not Found",
-                e.getMessage()
-        );
+                HttpStatus.NOT_FOUND, "Not Found", e.getMessage());
         response.put("errorCode", e.getErrorCode());
-
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
     }
 
     @ExceptionHandler(TaskValidationException.class)
     public ResponseEntity<Map<String, Object>> handleValidation(TaskValidationException e) {
         Map<String, Object> response = buildErrorResponse(
-                HttpStatus.BAD_REQUEST,
-                "Validation Error",
-                e.getMessage()
-        );
+                HttpStatus.BAD_REQUEST, "Validation Error", e.getMessage());
         response.put("errorCode", e.getErrorCode());
-
         return ResponseEntity.badRequest().body(response);
     }
 
     @ExceptionHandler(TaskBusinessException.class)
     public ResponseEntity<Map<String, Object>> handleBusiness(TaskBusinessException e) {
         Map<String, Object> response = buildErrorResponse(
-                HttpStatus.BAD_REQUEST,
-                "Business Rule Violation",
-                e.getMessage()
-        );
+                HttpStatus.BAD_REQUEST, "Business Rule Violation", e.getMessage());
         response.put("errorCode", e.getErrorCode());
-
         return ResponseEntity.badRequest().body(response);
+    }
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<Map<String, Object>> handleIllegalArgument(IllegalArgumentException e) {
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(buildErrorResponse(HttpStatus.CONFLICT, "Conflict", e.getMessage()));
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<Map<String, Object>> handleValidationExceptions(MethodArgumentNotValidException ex) {
         Map<String, Object> response = buildErrorResponse(
-                HttpStatus.BAD_REQUEST,
-                "Validation Error",
-                "Validation failed"
-        );
-
+                HttpStatus.BAD_REQUEST, "Validation Error", "Validation failed");
         Map<String, String> errors = new HashMap<>();
         ex.getBindingResult().getFieldErrors().forEach(error ->
                 errors.put(error.getField(), error.getDefaultMessage())
         );
-
         response.put("errors", errors);
         return ResponseEntity.badRequest().body(response);
     }
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Map<String, Object>> handleGeneric(Exception e) {
-        Map<String, Object> response = buildErrorResponse(
-                HttpStatus.INTERNAL_SERVER_ERROR,
-                "Internal Server Error",
-                "An unexpected error occurred"
-        );
         log.error("Unexpected error occurred", e);
-
-        return ResponseEntity.internalServerError().body(response);
+        return ResponseEntity.internalServerError()
+                .body(buildErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR,
+                        "Internal Server Error", "An unexpected error occurred"));
     }
 }

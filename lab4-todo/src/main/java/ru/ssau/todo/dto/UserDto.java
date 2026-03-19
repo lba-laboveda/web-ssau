@@ -1,9 +1,13 @@
-// ru.ssau.todo.dto.UserDto.java
 package ru.ssau.todo.dto;
 
 import java.util.List;
+
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import jakarta.validation.constraints.NotBlank;
 
+@JsonInclude(JsonInclude.Include.NON_NULL)  // null-поля не попадают в JSON-ответ
 public class UserDto {
 
     private Long id;
@@ -11,21 +15,21 @@ public class UserDto {
     @NotBlank(message = "Username is required")
     private String username;
 
-    @NotBlank(message = "Password is required")  // ✅ Валидация пароля
-    private String password;  // ✅ Новое поле
+    // Принимаем пароль на вход (при регистрации), но никогда не отдаём в ответе
+    @NotBlank(message = "Password is required")
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
+    private String password;
 
     private List<String> roles;
 
     public UserDto() {}
 
-    // Геттеры и сеттеры
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 
     public String getUsername() { return username; }
     public void setUsername(String username) { this.username = username; }
 
-    // ✅ ДОБАВЬТЕ ЭТИ МЕТОДЫ:
     public String getPassword() { return password; }
     public void setPassword(String password) { this.password = password; }
 

@@ -29,7 +29,7 @@ public class Task {
     private TaskStatus status;
     
     @ManyToOne
-    @JoinColumn
+    @JoinColumn(name = "created_by")
     private User createdBy;
     
     @Column

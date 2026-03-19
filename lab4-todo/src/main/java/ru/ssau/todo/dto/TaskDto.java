@@ -1,6 +1,7 @@
 package ru.ssau.todo.dto;
 
 import java.time.LocalDateTime;
+
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import ru.ssau.todo.entity.TaskStatus;
@@ -15,7 +16,8 @@ public class TaskDto {
     @NotNull(message = "Status is required")
     private TaskStatus status;
 
-    @NotNull(message = "CreatedBy is required")
+    // УБРАНО @NotNull — createdBy заполняется из токена в контроллере,
+    // а не передаётся клиентом в теле запроса
     private Long createdBy;
 
     private LocalDateTime createdAt;

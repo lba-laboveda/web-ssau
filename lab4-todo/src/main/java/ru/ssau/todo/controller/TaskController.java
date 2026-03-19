@@ -4,14 +4,22 @@ import java.util.List;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
 import jakarta.validation.Valid;
 import ru.ssau.todo.dto.TaskDto;
 import ru.ssau.todo.dto.TaskFilterDto;
 import ru.ssau.todo.service.TaskService;
-
 
 @RestController
 @RequestMapping("/tasks")
@@ -26,6 +34,8 @@ public class TaskController {
     @PostMapping
     public ResponseEntity<TaskDto> createTask(@Valid @RequestBody TaskDto taskDto) {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        // ИСПРАВЛЕНО: auth.getName() теперь возвращает username (String),
+        // т.к. в JwtFilter principal установлен как user.getUsername(), а не userId
         String username = auth.getName();
 
         TaskDto created = taskService.createTask(taskDto, username);
@@ -38,8 +48,7 @@ public class TaskController {
 
     @GetMapping("/{id}")
     public ResponseEntity<TaskDto> getTaskById(@PathVariable Long id) {
-        TaskDto task = taskService.findById(id);
-        return ResponseEntity.ok(task);
+        return ResponseEntity.ok(taskService.findById(id));
     }
 
     @GetMapping
@@ -57,8 +66,7 @@ public class TaskController {
             @PathVariable Long id,
             @Valid @RequestBody TaskDto taskDto) {
         taskDto.setId(id);
-        TaskDto updated = taskService.updateTask(taskDto);
-        return ResponseEntity.ok(updated);
+        return ResponseEntity.ok(taskService.updateTask(taskDto));
     }
 
     @DeleteMapping("/{id}")
@@ -69,7 +77,6 @@ public class TaskController {
 
     @GetMapping("/active/count")
     public ResponseEntity<Long> countActiveTasks(@RequestParam Long userId) {
-        long count = taskService.countActiveTasksByUserId(userId);
-        return ResponseEntity.ok(count);
+        return ResponseEntity.ok(taskService.countActiveTasksByUserId(userId));
     }
 }

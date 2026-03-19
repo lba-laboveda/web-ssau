@@ -96,8 +96,11 @@ public class TaskService {
             userRepository.findById(userId)
                     .orElseThrow(() -> new UserNotFoundException(userId));
         }
+        System.out.println("PPPPPPPPPPPPPPPPPPPPPPPfrom=" + from + ", to=" + to);
 
-        List<Task> tasks = taskRepository.findTasksByDateRangeAndUser(from, to, userId);
+        List<Task> tasks = taskRepository.findTasksByDateRangeAndUser(userId, from, to);
+        System.out.println("333333333333333333333333333from=" + from + ", to=" + to);
+        
         return tasks.stream()
                 .map(TaskMapper::toDto)
                 .collect(Collectors.toList());

@@ -1,0 +1,318 @@
+@baseUrl = http://localhost:8080
+
+### ============================================================
+### 1. РЕГИСТРАЦИЯ ПОЛЬЗОВАТЕЛЕЙ
+### ============================================================
+
+### Зарегистрировать обычного пользователя
+# @name registerUser
+POST {{baseUrl}}/users/register
+Content-Type: application/json
+
+{
+  "username": "liliy1",
+  "password": "password123"
+}
+
+###
+
+### Зарегистрировать администратора (username = "admin" → роль ADMIN)
+# @name registerAdmin
+POST {{baseUrl}}/users/register
+Content-Type: application/json
+
+{
+  "username": "admin",
+  "password": "adminpass123"
+}
+
+###
+
+### Попытка зарегистрировать того же пользователя повторно → 400
+POST {{baseUrl}}/users/register
+Content-Type: application/json
+
+{
+  "username": "liliy",
+  "password": "anotherpass"
+}
+
+###
+
+### Регистрация без пароля → 400 (валидация @NotBlank)
+POST {{baseUrl}}/users/register
+Content-Type: application/json
+
+{
+  "username": "nopass"
+}
+
+
+### ============================================================
+### 2. ЛОГИН — ПОЛУЧЕНИЕ ТОКЕНОВ
+### ============================================================
+
+### Логин обычного пользователя
+# @name loginUser
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "username": "liliy",
+  "password": "password123"
+}
+
+###
+
+### Логин администратора
+# @name loginAdmin
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "username": "admin",
+  "password": "adminpass123"
+}
+
+###
+
+### Неверный пароль → 401
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "username": "liliy",
+  "password": "wrongpassword"
+}
+
+###
+
+### Несуществующий пользователь → 401
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "username": "ghost",
+  "password": "password123"
+}
+
+
+### ============================================================
+### 3. /auth/me — ТЕКУЩИЙ ПОЛЬЗОВАТЕЛЬ
+###    Вставьте accessToken из ответа loginUser выше
+### ============================================================
+
+### Получить текущего пользователя (USER)
+# @name getMe
+GET {{baseUrl}}/auth/me
+Authorization: Bearer {{loginUser.response.body.accessToken}}
+
+###
+
+### Получить текущего пользователя (ADMIN)
+GET {{baseUrl}}/auth/me
+Authorization: Bearer {{loginAdmin.response.body.accessToken}}
+
+###
+
+### Без токена → 401 / 403
+GET {{baseUrl}}/auth/me
+
+###
+
+### Невалидный токен → 401
+GET {{baseUrl}}/auth/me
+Authorization: Bearer this.is.not.a.valid.token
+
+
+### ============================================================
+### 4. REFRESH TOKEN — ОБНОВЛЕНИЕ ACCESS TOKEN
+### ============================================================
+
+### Получить новый Access Token по Refresh Token
+# @name refreshToken
+POST {{baseUrl}}/auth/refresh
+Content-Type: application/json
+
+{
+  "refreshToken": "{{loginUser.response.body.refreshToken}}"
+}
+
+###
+
+### Передать Access Token вместо Refresh → 401
+### (Access Token содержит поле "roles", Refresh — нет)
+POST {{baseUrl}}/auth/refresh
+Content-Type: application/json
+
+{
+  "refreshToken": "{{loginUser.response.body.accessToken}}"
+}
+
+###
+
+### Испорченный refresh токен → 401
+POST {{baseUrl}}/auth/refresh
+Content-Type: application/json
+
+{
+  "refreshToken": "broken.token"
+}
+
+
+### ============================================================
+### 5. ЗАДАЧИ — СОЗДАНИЕ (createdBy берётся из токена, не из тела)
+### ============================================================
+
+### Создать задачу от имени пользователя
+# @name createTask1
+POST {{baseUrl}}/tasks
+Content-Type: application/json
+Authorization: Bearer {{loginUser.response.body.accessToken}}
+
+{
+  "title": "Купить молоко",
+  "status": "OPEN"
+}
+
+###
+
+### Создать вторую задачу
+# @name createTask2
+POST {{baseUrl}}/tasks
+Content-Type: application/json
+Authorization: Bearer {{loginUser.response.body.accessToken}}
+
+{
+  "title": "Сделать лабораторную",
+  "status": "IN_PROGRESS"
+}
+
+###
+
+### Поля id и createdAt из тела должны игнорироваться
+# @name createTask3
+POST {{baseUrl}}/tasks
+Content-Type: application/json
+Authorization: Bearer {{loginUser.response.body.accessToken}}
+
+{
+  "id": 999,
+  "title": "Протестировать игнорирование полей",
+  "status": "OPEN",
+  "createdAt": "2000-01-01T00:00:00"
+}
+
+###
+
+### Без токена → 401 / 403
+POST {{baseUrl}}/tasks
+Content-Type: application/json
+
+{
+  "title": "Анонимная задача",
+  "status": "OPEN"
+}
+
+
+### ============================================================
+### 6. ЗАДАЧИ — ЧТЕНИЕ
+### ============================================================
+
+### Получить задачу по id (из ответа createTask1)
+GET {{baseUrl}}/tasks/{{createTask1.response.body.id}}
+Authorization: Bearer {{loginUser.response.body.accessToken}}
+
+###
+
+### Несуществующая задача → 404
+GET {{baseUrl}}/tasks/999999
+Authorization: Bearer {{loginUser.response.body.accessToken}}
+
+###
+
+### Получить все задачи
+GET {{baseUrl}}/tasks
+Authorization: Bearer {{loginUser.response.body.accessToken}}
+
+###
+
+### Фильтрация по диапазону дат
+GET {{baseUrl}}/tasks?from=2000-01-01T00:00:00&to=2026-12-31T23:59:59
+Authorization: Bearer {{loginUser.response.body.accessToken}}
+
+###
+
+### Подсчёт активных задач пользователя
+GET {{baseUrl}}/tasks/active/count?userId={{createTask1.response.body.createdBy}}
+Authorization: Bearer {{loginUser.response.body.accessToken}}
+
+
+### ============================================================
+### 7. ЗАДАЧИ — ОБНОВЛЕНИЕ
+### ============================================================
+
+### Закрыть задачу (OPEN → DONE)
+PUT {{baseUrl}}/tasks/{{createTask1.response.body.id}}
+Content-Type: application/json
+Authorization: Bearer {{loginUser.response.body.accessToken}}
+
+{
+  "title": "Купить молоко",
+  "status": "DONE",
+  "createdBy": {{createTask1.response.body.createdBy}}
+}
+
+###
+
+### Обновить несуществующую задачу → 404
+PUT {{baseUrl}}/tasks/999999
+Content-Type: application/json
+Authorization: Bearer {{loginUser.response.body.accessToken}}
+
+{
+  "title": "Несуществующая",
+  "status": "OPEN",
+  "createdBy": 1
+}
+
+
+### ============================================================
+### 8. ЗАДАЧИ — УДАЛЕНИЕ (только ADMIN)
+### ============================================================
+
+### Удалить задачу от имени USER → 403
+DELETE {{baseUrl}}/tasks/{{createTask1.response.body.id}}
+Authorization: Bearer {{loginUser.response.body.accessToken}}
+
+###
+
+### Удалить задачу от имени ADMIN → 204 (или 400 если задача свежая < 5 мин)
+DELETE {{baseUrl}}/tasks/{{createTask1.response.body.id}}
+Authorization: Bearer {{loginAdmin.response.body.accessToken}}
+
+###
+
+### Без токена → 401 / 403
+DELETE {{baseUrl}}/tasks/1
+
+
+### ============================================================
+### 9. ПРОВЕРКА РОЛЕВОГО ДОСТУПА — СВОДНАЯ
+### ============================================================
+
+### USER не может удалять → 403
+DELETE {{baseUrl}}/tasks/35
+Authorization: Bearer {{loginUser.response.body.accessToken}}
+
+###
+
+### ADMIN может удалять → 204
+DELETE {{baseUrl}}/tasks/34
+Authorization: Bearer {{loginAdmin.response.body.accessToken}}
+
+###
+
+### Обновлённый Access Token (из /auth/refresh) тоже должен работать
+GET {{baseUrl}}/auth/me
+Authorization: Bearer {{refreshToken.response.body.accessToken}}

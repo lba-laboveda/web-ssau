@@ -39,13 +39,12 @@ Content-Type: application/json
 
 ### Получить задачу по идентификатору
 # @name getTask1
-GET {{baseUrl}}/tasks/{{createTask1.response.body.id}}
-
 GET {{baseUrl}}/tasks/999
 
 ### Получить все задачи пользователя
 GET {{baseUrl}}/tasks?userId={{userId}}
 
+###
 GET {{baseUrl}}/tasks?from=2024-01-01T00:00:00&to=2025-12-31T23:59:59&userId={{userId}}
 
 curl -v "http://localhost:8080/tasks?from=2025-01-01T00:00:00&to=2024-12-31T23:59:59&userId=2"
@@ -84,7 +83,7 @@ Content-Type: application/json
 GET {{baseUrl}}/tasks/active/count?userId={{userId}}
 
 ### Удалить задачу
-DELETE {{baseUrl}}/tasks/4
+DELETE {{baseUrl}}/tasks/29
 
 
 ### Проверить, что задача удалена

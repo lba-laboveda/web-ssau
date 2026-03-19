@@ -11,11 +11,12 @@ import ru.ssau.todo.entity.Task;
 
 public interface TaskRepository extends JpaRepository<Task, Long> {
     
-    @Query(value = "SELECT * FROM task WHERE created_by = :userId " +
-       "AND (cast(:from as timestamp) IS NULL OR created_at >= cast(:from as timestamp)) " +
-       "AND (cast(:to as timestamp) IS NULL OR created_at <= cast(:to as timestamp)) " +
-       "ORDER BY created_at DESC", 
-       nativeQuery = true)
+    @Query(value = "SELECT * FROM task WHERE " +
+   "(:userId IS NULL OR created_by = :userId) " +
+   "AND (cast(:from as timestamp) IS NULL OR created_at >= cast(:from as timestamp)) " +
+   "AND (cast(:to as timestamp) IS NULL OR created_at <= cast(:to as timestamp)) " +
+   "ORDER BY created_at DESC",
+   nativeQuery = true)
 List<Task> findTasksByDateRangeAndUser(
         @Param("from") LocalDateTime from,
         @Param("to") LocalDateTime to,

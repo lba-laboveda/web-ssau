@@ -40,8 +40,10 @@ public class CustomUserDetailsService implements UserDetailsService {
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found: " + username));
 
+        // ИСПРАВЛЕНО: роли в БД уже хранятся с префиксом ROLE_ (например ROLE_USER),
+        // поэтому НЕ добавляем "ROLE_" ещё раз — иначе получалось ROLE_ROLE_USER
         List<GrantedAuthority> authorities = user.getRoles().stream()
-                .map(role -> new SimpleGrantedAuthority("ROLE_" + role.getName()))
+                .map(role -> new SimpleGrantedAuthority(role.getName()))
                 .collect(Collectors.toList());
 
         return new org.springframework.security.core.userdetails.User(
@@ -61,7 +63,7 @@ public class CustomUserDetailsService implements UserDetailsService {
         user.setUsername(dto.getUsername());
         user.setPassword(passwordEncoder.encode(dto.getPassword()));
 
-        // Назначение роли
+        // Назначение роли: admin -> ROLE_ADMIN, иначе -> ROLE_USER
         String roleName = "admin".equalsIgnoreCase(dto.getUsername()) ? "ROLE_ADMIN" : "ROLE_USER";
         Role role = roleRepository.findByName(roleName)
                 .orElseThrow(() -> new IllegalStateException("Role not found: " + roleName));
@@ -72,7 +74,6 @@ public class CustomUserDetailsService implements UserDetailsService {
         UserDto result = new UserDto();
         result.setId(saved.getId());
         result.setUsername(saved.getUsername());
-        // Пароль не возвращаем в DTO
         return result;
     }
 }

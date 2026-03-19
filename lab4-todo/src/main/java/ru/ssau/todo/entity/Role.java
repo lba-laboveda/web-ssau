@@ -12,7 +12,7 @@ import jakarta.persistence.ManyToMany;
 import jakarta.persistence.Table;
 
 @Entity
-@Table
+@Table(name = "roles")
 public class Role {
     
     @Id
